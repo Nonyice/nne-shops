@@ -777,16 +777,13 @@ def submit_testimonial():
         conn.close()
 
         flash("Thank you! Your testimonial has been submitted for review.", "success")
-        return redirect(url_for('homepage'))
+        return redirect(url_for('home'))
 
     return render_template('submit_testimonial.html')
 
 
 @app.route('/manage-testimonials', methods=['GET', 'POST'])
 def manage_testimonials():
-    if 'is_admin' not in session or not session['is_admin']:
-        flash("Unauthorized access.", "error")
-        return redirect(url_for('login'))
 
     conn = get_db_connection()
     cursor = conn.cursor()
