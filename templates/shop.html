@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Shop with Sharpy Glam Explore{% endblock %}
+
+{% block content %}
+    <h2>Shop with Sharpy Glam</h2>
+    
+    
+    <div class="filters">
+        <form method="GET" action="/shop" class="filter-form">
+            <label for="category">Category:</label>
+            <select name="category" id="category" onchange="this.form.submit()">
+                <option value="">All Categories</option>
+                {% for category in categories %}
+                    <option value="{{ category }}" {% if category == category_filter %}selected{% endif %}>{{ category }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="sort_by">Sort By:</label>
+            <select name="sort_by" id="sort_by" onchange="this.form.submit()">
+                <option value="created_at" {% if sort_by == 'created_at' %}selected{% endif %}>Newest</option>
+                <option value="price" {% if sort_by == 'price' %}selected{% endif %}>Price</option>
+            </select>
+
+            <label for="order">Order:</label>
+            <select name="order" id="order" onchange="this.form.submit()">
+                <option value="asc" {% if sort_order == 'asc' %}selected{% endif %}>Ascending</option>
+                <option value="desc" {% if sort_order == 'desc' %}selected{% endif %}>Descending</option>
+            </select>
+        </form>
+    </div>
+
+    
+    <div class="active-filters">
+        {% if category_filter %}
+            <span>Category: {{ category_filter }}</span>
+        {% endif %}
+        {% if sort_by %}
+            <span>Sorted By: {{ sort_by | capitalize }}</span>
+        {% endif %}
+        {% if sort_order %}
+            <span>Order: {{ sort_order | capitalize }}</span>
+        {% endif %}
+    </div>
+
+
+    
+
+    <div class="container-shop">
+
+        
+
+       
+    
+        {% if products and products| length > 0 %}
+            <div class="product-grid">
+                {% for product in products %}
+                <div class="product-card">
+                    
+                        <img src="{{ product[4] }}" alt="{{ product[1] }}">
+                        <h3>{{ product[1] }}</h3>
+                    <p>{{ product[2] }}</p>
+                    <p class="price">${{ product[3] }}</p>
+
+                    
+                    <div class="add_to_cart"><a href="{{ url_for('add_to_cart', product_id=product[0]) }}">Add to Cart</a></div>
+                        
+                </div>
+                {% endfor %}
+            </div>
+
+        {% else %}
+            <p class="no-products">No products available. Try adjusting your filters.</p>
+        {% endif %}
+        
+        
+        <div class="pagination">
+            <ol>
+                {% if current_page > 1 %}
+                    <li><a href="?page={{ current_page - 1 }}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}&order={{ sort_order }}{% endif %}" aria-label="Previous Page">Previous</a></li>
+                {% endif %}
+    
+                {% for page_num in range(1, total_pages + 1) %}
+                    <li>
+                        <a href="?page={{ page_num }}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}&order={{ sort_order }}{% endif %}" 
+                           class="{{ 'active' if page_num == current_page else '' }}" aria-label="Page {{ page_num }}">
+                        {{ page_num }}
+                        </a>
+                    </li>
+                {% endfor %}
+    
+                {% if current_page < total_pages %}
+                    <li><a href="?page={{ current_page + 1 }}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}&order={{ sort_order }}{% endif %}" aria-label="Next Page">Next</a></li>
+                {% endif %}
+            </ol>
+        </div>
+    
+
+
+
+    
+    
+
+    </div>
+
+    {% endblock %}

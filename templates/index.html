@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Welcome to the Official Homepage Sharpy Glam Market Place{% endblock %}
+
+{% block content %}
+{% if 'user_id' in session %}
+
+<div class="session-user">
+    Welcome, {{ session['user_id'] }}! 
+</div>
+
+{% endif %}
+
+<h2>Sharpy Glam -- Explore</h2>
+    
+
+    
+    
+<!-- Main Banner Slider -->
+<div class="carousel-container">
+    <div class="carousel">
+        {% for slide in slides %}
+        <div class="slide" style="background-image: url('{{ slide[0] }}');">
+            <div class="overlay">
+                <h1>{{ slide[1] }}</h1>
+                <p>{{ slide[2] }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="controls">
+        <button class="prev">&lt;</button>
+        <button class="next">&gt;</button>
+    </div>
+</div>
+
+<div class="container-home">
+    <h2>Trending Products</h2>
+        <div class="trending">
+            {% for product in trending_products %}
+            <div class="product">
+                <img src="{{ product[2] }}" alt="{{ product[1] }}">
+                <h3>{{ product[1] }}</h3>
+                <p>{{ product[2] }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <h2>Deals of the Day</h2>
+        <div class="deals">
+            {% for deal in deals %}
+            <div class="deal">
+                <img src="{{ deal[2] }}" alt="{{ deal[0] }}">
+                <h3>{{ deal[0] }}</h3>
+                <p>{{ deal[1] }}</p>
+                <p>Discount: {{ deal[3] }}%</p>
+                <p>Expires on: {{ deal[4] }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <h2>Categories</h2>
+        <div class="categories">
+            {% for category in categories %}
+            <div class="category">
+                <img src="{{ category[2] }}" alt="{{ category[1] }}">
+                <h3>{{ category[1] }}</h3>
+            </div>
+            {% endfor %}
+        </div>
+
+        <h2>Customer Testimonials</h2>
+        <div class="testimonials">
+            {% for testimonial in testimonials %}
+            <blockquote>
+                <p>{{ testimonial[1] }}</p>
+                <footer>{{ testimonial[0] }}</footer>
+            </blockquote>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+    
+
+
+
+{% endblock %}

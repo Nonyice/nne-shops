@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sharpy Glam Base Template Page{% endblock %}</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.cloudwares.com/css/webfonts.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <a href="/">Sharpy Glam</a>
+            </div>
+
+            <div class="hamburger" onclick="toggleMenu()">
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+
+            <div class="menu">
+                <a href="{{ url_for('home') }}">Home</a>
+                <a href="{{ url_for('shop') }}">Shop</a>
+                <a href="{{ url_for('cart') }}">Cart</a>
+
+                
+                {% if 'user_id' in session %}
+                    <a href="{{ url_for('logout') }}">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}">Login</a>
+                {% endif %}
+            </div>
+        </nav>
+
+        <form action="{{ url_for('search') }}" method="GET" class="search-form">
+            <input type="text" name="query" placeholder="search products" required>
+            <button type="submit">Search</button>
+        </form>
+
+    </header>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+
+        {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+
+    {% endif %}
+    {% endwith %}
+
+    <script>
+        setTimeout(() => {
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(message => {
+                message.style.opacity = '0';
+                setTimeout(() => message.remove(), 500);
+            });
+        }, 3000);
+
+    </script>
+
+    <main>
+        {% block content %}
+        
+        {% endblock %}
+    </main>
+
+    <footer>
+        <div class="footer-note">
+            <p>
+                <strong>Sharpy Glam</strong> -- Your ultimate destination for chic, elegant and timeless ladies' items.
+                From trendy accessories to wardrobe essentials, we bring glamour to your fingertips.
+                Shop with confidence, because you deserve the best!
+            </p>
+        </div>
+        <div class="footer-socials">
+            
+            <a href="https://www.facebook.com/" target="_blank"><i class="fab fa-facebook"></i></a>
+            <a href="https://www.twitter.com/" target="_blank"><i class="fab fa-twitter"></i></a>
+            <a href="https://www.instagram.com/" target="_blank"><i class="fab fa-instagram"></i></a>
+            <a href="https://www.linkedin.com/" target="_blank"><i class="fab fa-linkedin"></i></a>
+            
+        </div>
+
+        <p>&copy; 2024 Sharpy Glam: All Rights Reserved.</p>
+
+        <div class="poweredby">
+            <p>Powered by --The PlimsolTech Group--</p>
+        </div>
+    </footer>
+    
+    
+
+    <script>
+        function toggleMenu() {
+            document.querySelector('.menu').classList.toggle('show');
+        }
+    </script>
+    <script src="/static/slider.js"></script>
+</body>
+</html>

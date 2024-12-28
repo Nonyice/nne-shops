@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Manage Testimonials</title>
+</head>
+<body>
+    <h1>Pending Testimonials</h1>
+    <ul>
+        {% for testimonial in pending_testimonials %}
+        <li>
+            <h3>{{ testimonial[1] }}</h3>
+            <p>{{ testimonial[2] }}</p>
+            <form method="POST">
+                <input type="hidden" name="testimonial_id" value="{{ testimonial[0] }}">
+                <button type="submit" name="action" value="approve">Approve</button>
+                <button type="submit" name="action" value="reject">Reject</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

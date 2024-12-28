@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Table</title>
+    <style>
+
+        a {
+            text-decoration: none;
+            color: cadetblue;
+        }
+        .container {
+            text-align: center;
+            width: 50%;
+            box-shadow: 0.7px 0 0 1.3px;
+            border-radius: 5px;
+            margin: 60px auto;
+            background-color: #fff;
+            padding: 30px;
+            height: 100vh;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background-color: darkred;
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Clear All Entries in a Table</h2>
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+        <form action="/clear_table" method="post">
+            <label for="table_name">Enter Table Name:</label>
+            <input type="text" id="table_name" name="table_name" required>
+            <button type="submit">Clear Table</button>
+        </form>
+
+        <div class="return_to" style="margin: 20px;">
+            <a href="{{ url_for('home') }}">Return to Dashboard</a>
+        </div>
+    </div>
+    
+</body>
+</html>

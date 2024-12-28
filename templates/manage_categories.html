@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Manage Categories</title>
+</head>
+<body>
+    <h1>Manage Categories</h1>
+
+    <!-- Form to Create Category -->
+    <form method="POST">
+        <label for="name">Category Name:</label>
+        <input type="text" name="name" id="name" required>
+        <br>
+       
+        <button type="submit">Add Category</button>
+    </form>
+
+    <h2>Existing Categories</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category in categories %}
+            <tr>
+                <td>{{ category[0] }}</td>
+                <td>{{ category[1] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

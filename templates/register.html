@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+    <h2>Register</h2>
+    
+    <form method="POST" action="{{ url_for('register') }}">
+        <div>
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+
+            <!-- registration.html -->
+        <div>
+            <label for="email">E-mail</label>
+            <input type="email" id="email" name="email" required placeholder="Enter your email @example.com">
+        </div>
+
+        <div>
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+
+        <div>
+            <label for="confirm_password">Confirm Password</label>
+            <input type="password" id="confirm_password" name="confirm_password" required>
+        </div>
+
+        <button type="submit">Register</button>
+
+    
+
+<div id="verification-container" style="display:none;">
+    <p>Please check your email for the verification code.</p>
+    <input type="text" id="verification-code" placeholder="Enter verification code">
+    <button id="verify-code">Verify Code</button>
+</div>
+
+<p id="response-message"></p>
+
+
+    </form>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Handle email submission
+    $('#registration-form').on('submit', function(e) {
+        e.preventDefault();
+        var email = $('#email').val();
+
+        $.ajax({
+            type: "POST",
+            url: "/send_code",
+            data: { email: email },
+            success: function(response) {
+                if (response.success) {
+                    $('#response-message').text(response.message);
+                    $('#verification-container').show();
+                } else {
+                    $('#response-message').text(response.message);
+                }
+            },
+            error: function(error) {
+                $('#response-message').text('An error occurred. Please try again.');
+            }
+        });
+    });
+
+    // Handle code verification
+    $('#verify-code').on('click', function() {
+        var code = $('#verification-code').val();
+
+        $.ajax({
+            type: "POST",
+            url: "/verify_code",
+            data: { code: code },
+            success: function(response) {
+                if (response.success) {
+                    $('#response-message').text('Verification successful! You are now registered.');
+                    // Optionally, redirect to another page
+                    // window.location.href = '/welcome';
+                } else {
+                    $('#response-message').text('Invalid verification code. Please try again.');
+                }
+            },
+            error: function(error) {
+                $('#response-message').text('An error occurred. Please try again.');
+            }
+        });
+    });
+});
+</script>
+
+    <p>Already have an account? <a href="{{ url_for('login') }}">Login</a></p>
+{% endblock %}

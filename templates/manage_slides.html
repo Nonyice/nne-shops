@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Manage Slides</title>
+</head>
+<body>
+    <h1>Manage Slides</h1>
+    
+    <!-- Add New Slide -->
+    <form method="POST" enctype="multipart/form-data">
+        <label for="image">Upload Image:</label>
+        <input type="file" name="image" required>
+        <br>
+        <label for="overlay_title">Overlay Title:</label>
+        <input type="text" name="overlay_title" required>
+        <br>
+        <label for="overlay_caption">Overlay Caption:</label>
+        <textarea name="overlay_caption" required></textarea>
+        <br>
+        <button type="submit">Add Slide</button>
+    </form>
+
+    <h2>Existing Slides</h2>
+    <ul>
+        {% for slide in slides %}
+        <li>
+            <img src="{{ slide[1] }}" alt="Slide Image" width="150">
+            <h3>{{ slide[2] }}</h3>
+            <p>{{ slide[3] }}</p>
+            <!-- Remove Slide -->
+            <form method="POST" style="display: inline;">
+                <input type="hidden" name="slide_id" value="{{ slide[0] }}">
+                <button type="submit">Remove Slide</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block title %}Order Confirmation{% endblock %}
+
+{% block content %}
+<h2>Order Confirmation</h2>
+
+<p>Thank you for your order! Your payment has been processed successfully.</p>
+<p><a href="{{ url_for('shop') }}" class="btn">Back to Shop</a></p>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Shop with Sharpy Glam Explore{% endblock %}
+
+{% block content %}
+
+
+<div class="container-cart">
+    {% if cart_items %}
+
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Total</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in cart_items %}
+            <tr>
+                <td>{{ item.name }}</td>
+                <td>${{ item.price }}</td>
+                <td>
+                    <form action="{{ url_for('update_cart', product_id=item.id) }}" method="POST">
+                        <input type="number" name="quantity" value="{{ item.quantity }}" min="1">
+                        <button type="submit">Update</button>
+                    </form>
+                </td>
+                <td>${{ item.price * item.quantity }}</td>
+                <td>
+                    <a href="{{ url_for('remove_from_cart', product_id=item.id) }}">Remove</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p>Total: ${{ total_price }}</p>
+    <a href="/checkout" class="btn">Checkout</a>
+{% else %}
+    <p>Your cart is empty.</p>
+{% endif %}
+
+</div>
+
+    {% endblock %}

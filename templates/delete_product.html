@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Product{% endblock %}
+
+{% block content %}
+<h2>Delete Product</h2>
+
+<p>Are you sure you want to delete the following product?</p>
+
+<div class="product-summary">
+    <p><strong>Name:</strong> {{ product.name }}</p>
+    <p><strong>Category:</strong> {{ product.category }}</p>
+    <p><strong>Price:</strong> ${{ product.price }}</p>
+    <p><strong>Stock:</strong> {{ product.stock }}</p>
+</div>
+
+<form method="POST" action="/delete_product/{{ product.id }}">
+    <button type="submit" class="btn danger">Delete</button>
+    <a href="/manage_products" class="btn">Cancel</a>
+</form>
+{% endblock %}
