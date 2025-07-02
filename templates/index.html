@@ -1,89 +1,104 @@
 {% extends 'base.html' %}
 
-{% block title %}Welcome to the Official Homepage Sharpy Glam Market Place{% endblock %}
+{% block title %}Welcome to Nne Shop{% endblock %}
 
 {% block content %}
-{% if 'user_id' in session %}
-
-<div class="session-user">
-    Welcome, {{ session['user_id'] }}! 
-</div>
-
-{% endif %}
-
-<h2>Sharpy Glam -- Explore</h2>
-    
-
-    
-    
-<!-- Main Banner Slider -->
-<div class="carousel-container">
-    <div class="carousel">
-        {% for slide in slides %}
-        <div class="slide" style="background-image: url('{{ slide[0] }}');">
-            <div class="overlay">
-                <h1>{{ slide[1] }}</h1>
-                <p>{{ slide[2] }}</p>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    
-    <div class="controls">
-        <button class="prev">&lt;</button>
-        <button class="next">&gt;</button>
-    </div>
-</div>
 
 <div class="container-home">
-    <h2>Trending Products</h2>
-        <div class="trending">
-            {% for product in trending_products %}
-            <div class="product">
-                <img src="{{ product[2] }}" alt="{{ product[1] }}">
-                <h3>{{ product[1] }}</h3>
-                <p>{{ product[2] }}</p>
-            </div>
-            {% endfor %}
-        </div>
-
-        <h2>Deals of the Day</h2>
-        <div class="deals">
-            {% for deal in deals %}
-            <div class="deal">
-                <img src="{{ deal[2] }}" alt="{{ deal[0] }}">
-                <h3>{{ deal[0] }}</h3>
-                <p>{{ deal[1] }}</p>
-                <p>Discount: {{ deal[3] }}%</p>
-                <p>Expires on: {{ deal[4] }}</p>
-            </div>
-            {% endfor %}
-        </div>
-
-        <h2>Categories</h2>
-        <div class="categories">
-            {% for category in categories %}
-            <div class="category">
-                <img src="{{ category[2] }}" alt="{{ category[1] }}">
-                <h3>{{ category[1] }}</h3>
-            </div>
-            {% endfor %}
-        </div>
-
-        <h2>Customer Testimonials</h2>
-        <div class="testimonials">
-            {% for testimonial in testimonials %}
-            <blockquote>
-                <p>{{ testimonial[1] }}</p>
-                <footer>{{ testimonial[0] }}</footer>
-            </blockquote>
-            {% endfor %}
-        </div>
-    </div>
-
+<!-- Slider Section -->
+<div class="slider-container">
+  <div class="slides-wrapper">
+    {% for slide in slides %}
+    <div class="slide position-absolute w-100 h-100 {% if loop.first %}active{% endif %}" style="transition: opacity 1s;">
+      <img src="{{ url_for('static', filename= 'uploads/' + slide.image_url.replace('static/uploads/', '')) }}" alt="Slide Image" class="w-100 h-100" style="object-fit: cover;">
+      <div class="overlay">
+        <h2>{{slide.overlay_title }}</h2>
+        <p>{{slide.overlay_caption}}</p>
+  </div>
 </div>
-    
+{% endfor %}
+</div>
+ <!-- Navigation Controls -->
+ <button class="control" onclick="prevSlide()">&#10094;</button>
+ <button class="control" onclick="nextSlide()">&#10095;</button>
+</div>
 
 
+
+
+
+<!-- Slider Script -->
+
+
+
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let current = 0;
+
+  function showSlide(index) {
+    slides.forEach((slide, i) => {
+      slide.classList.toggle('active', i === index);
+    });
+  }
+
+  function nextSlide() {
+    current = (current + 1) % slides.length;
+    showSlide(current);
+  }
+
+  function prevSlide() {
+    current = (current - 1 + slides.length) % slides.length;
+    showSlide(current);
+  }
+
+  // Auto-play every 5 seconds
+  setInterval(nextSlide, 5000);
+
+  // Initialize first slide
+  showSlide(current);
+</script>
+
+
+<!-- Trending Products -->
+<section class="py-5 bg-light">
+  <div class="container">
+    <h2 class="text-center mb-4">🔥 Trending Products</h2>
+    <div class="product-slider">
+      {% for product in trending_products %}
+      <div class="product-cards">
+        <div class="card h-100">
+          <img src="{{ url_for('static', filename='uploads/' + product.image_url.replace('static/uploads/', '')) }}" class="card-img-top" alt="Product">
+          <div class="card-body">
+            <h5 class="card-title">{{ product['name'] }}</h5>
+            <p class="card-text">{{ product['description'][:50] }}...</p>
+            <a href="{{ url_for('product_detail', product_id=product['id']) }}" class="btn btn-outline-primary btn-sm">View</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+
+<!-- Testimonials -->
+<section class="py-5 bg-light">
+  <div class="col-md-3 mb-4 animate-on-scroll">
+    <h2 class="text-center mb-4">💬 What Customers Are Saying</h2>
+    <div class="col-md-3 mb-4 animate-on-scroll">
+      {% for testimonial in testimonials %}
+      <div class="">
+        <blockquote class="blockquote text-center">
+          <p class="mb-0">"{{ testimonial[1] }}"</p>
+          <div class="blockquote-footer text-white">{{ testimonial[0] }}</div>
+        </blockquote>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+</div>
+</div>
 
 {% endblock %}

@@ -1,4 +1,4 @@
-from flask import Flask, flash, render_template, request, redirect, url_for, session, jsonify
+from flask import Flask, flash, render_template, request, redirect, url_for, session
 from itsdangerous import URLSafeTimedSerializer
 import random
 import psycopg2
@@ -15,6 +15,8 @@ from email.mime.multipart import MIMEMultipart
 from psycopg2 import sql, errors
 from math import ceil
 from werkzeug.utils import secure_filename
+from datetime import time
+from psycopg2.extras import RealDictCursor
 
 
 
@@ -42,7 +44,6 @@ app.config['DB_CONN_STRING'] = f"dbname='nne_shop' user='{db_username}' password
 # Function to get database connection
 def get_db_connection():
     conn = psycopg2.connect(app.config['DB_CONN_STRING'])
-    
     return conn
 
 
@@ -66,8 +67,8 @@ SMTP_USERNAME = os.environ.get('SMTP_USERNAME', 'shopwithsharpyglam@gmail.com')
 SMTP_PASSWORD=keyring.get_password('smtp.gmail.com', SMTP_USERNAME)
 
 
-
-
+UPLOAD_FOLDER = 'static/uploads'  # Directory for uploaded images
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}  # Allowed image extensions
 
 
 
@@ -75,38 +76,44 @@ SMTP_PASSWORD=keyring.get_password('smtp.gmail.com', SMTP_USERNAME)
 @app.route('/')
 def home():
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    # Fetch slides
     cursor.execute("SELECT image_url, overlay_title, overlay_caption FROM slides")
     slides = cursor.fetchall()
-   
-    # Fetch trending products
-    cursor.execute("SELECT id, name, description, image_url FROM products WHERE is_trending = TRUE")
+
+    # Fetch products for each section
+    cursor.execute("SELECT id, name, description, price, image_url FROM products WHERE is_trending = TRUE")
     trending_products = cursor.fetchall()
 
-    # Fetch deals of the day
-    cursor.execute("""
-        SELECT p.name, p.description, p.image_url, d.discount, d.expiry_time
-        FROM deals d
-        JOIN products p ON d.product_id = p.id
-        WHERE d.expiry_time > NOW()
-    """)
-    deals = cursor.fetchall()
-
-    # Fetch categories
-    cursor.execute("SELECT id, name FROM categories")
-    categories = cursor.fetchall()
-
-    # Fetch testimonials
+    
     cursor.execute("SELECT customer_name, comment FROM testimonials WHERE status = 'approved' ORDER BY created_at DESC LIMIT 5")
     testimonials = cursor.fetchall()
 
-
     conn.close()
 
-    return render_template('index.html', slides=slides, trending_products=trending_products, deals=deals, categories=categories,
-        testimonials=testimonials
-    )
-
+    return render_template('index.html',
+                           slides=slides,
+                           trending_products=trending_products,
+                           testimonials=testimonials)
+ 
+    
+@app.route('/product/<int:product_id>')
+def product_detail(product_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT id, name, description, price, image_url FROM products WHERE id = %s', (product_id))
+    product = cursor.fetchone()
+    
+    conn.close()
+    
+    
+    if not product:
+        flash('Product not found!', 'error')
+        return redirect(url_for('home'))
+    return render_template('product_detail.html', product=product)
+    
 
 
 
@@ -287,10 +294,6 @@ def verify():
 
 
 
-
-
-
-
 @app.route('/shop')
 def shop():
     # Retrieve query parameters
@@ -455,33 +458,50 @@ def remove_from_cart(product_id):
     return redirect(url_for('cart'))
 
 
+def shipping_rate(postcode, total_weight_kg):
+    # Actual logic here
+    
+    return 0.05
+
 
 @app.route('/checkout', methods=['GET', 'POST'])
 def checkout():
+    
+     # Validate and load cart
+    cart_items = session.get('cart', [])
+    if not cart_items:
+        flash("Your cart is empty. Add items before checkout.", "error")
+        return redirect(url_for('cart'))
+        
     if request.method == 'POST':
         # Capture customer details
         customer_name = request.form.get('customer_name')
         email = request.form.get('email')
+        shipping_address = request.form.get('address')
+        postcode = request.form.get('postcode')
         
-        # Validate cart
-        cart_items = session.get('cart', [])
-        if not cart_items:
-            flash("Your cart is empty. Add items before checkout.", "error")
-            return redirect(url_for('cart'))
+       
 
-        # Calculate total price
+        # Calculate total price and shipping
         total_price = sum(item['price'] * item['quantity'] for item in cart_items)
+        total_weight_kg = sum(item['quantity'] * 0.1 for item in cart_items)  # Assume 0.2kg per item
+        shipping_fee = shipping_rate(postcode, total_weight_kg)
+        grand_total = total_price + shipping_fee
 
         # Save order to database
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO orders (customer_name, email, total_price) VALUES (%s, %s, %s) RETURNING id",
-            (customer_name, email, total_price)
+            """
+            INSERT INTO orders 
+            (customer_name, email, total_price, shipping_address, postcode, shipping_fee) 
+            VALUES (%s, %s, %s, %s, %s, %s) RETURNING id
+            """,
+            (customer_name, email, total_price, shipping_address, postcode, shipping_fee)
         )
         order_id = cursor.fetchone()[0]
 
-        # Save order items
+        # Save order items and update stock
         for item in cart_items:
             cursor.execute(
                 """
@@ -490,8 +510,6 @@ def checkout():
                 """,
                 (order_id, item['id'], item['name'], item['quantity'], item['price'])
             )
-
-            # Update product stock
             cursor.execute(
                 "UPDATE products SET stock = stock - %s WHERE id = %s",
                 (item['quantity'], item['id'])
@@ -500,18 +518,18 @@ def checkout():
         conn.commit()
         conn.close()
 
-        # Save order ID to session for payment processing
+        # Save order ID to session
         session['order_id'] = order_id
         session.modified = True
 
         # Redirect to payment page
-        return redirect(url_for('payment'))
+        return redirect(url_for('payment', cart_items=cart_items, grand_total=grand_total))
 
     # If GET, display checkout page
     cart_items = session.get('cart', [])
     total_price = sum(item['price'] * item['quantity'] for item in cart_items)
 
-    # Fetch email for the user from the session or database
+    # Fetch email from session or user DB
     email = session.get('email')
     if not email and 'user_id' in session:
         conn = get_db_connection()
@@ -536,6 +554,7 @@ def payment():
 
     if request.method == 'POST':
         # Process payment (placeholder logic)
+        
         payment_method = request.form.get('payment_method')
 
         # Simulate payment success
@@ -613,63 +632,74 @@ def manage_products():
     )
     
     
-UPLOAD_FOLDER = 'static/uploads'  # Directory for uploaded images
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}  # Allowed image extensions
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+    print(f"File extension: {ext}")
+    return ext in ALLOWED_EXTENSIONS
+
 
 @app.route('/add_product', methods=['GET', 'POST'])
 def add_product():
-    
     conn = get_db_connection()
     cursor = conn.cursor()
-                
+    
     # Fetch categories for the dropdown
     cursor.execute("SELECT id, name FROM categories")
     categories = cursor.fetchall()
     
     if request.method == 'POST':
-        
         try:
-            
             name = request.form['name']
             description = request.form['description']
             price = request.form['price']
-            category_id = request.form['category']
+            category = request.form['category']
             stock = request.form['stock']
             image = request.files['image']
             is_trending = request.form['is_trending']
 
-            if image and allowed_file(image.filename):
-                filename = secure_filename(image.filename)
-                image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                image.save(image_path)  # Save image to the server
-                
-                # Save the relative path to the database (e.g., "static/uploads/filename.jpg")
-                relative_path = os.path.join('static/uploads', filename)
-                
-                
-                
-                cursor.execute("""
-                    INSERT INTO products (name, description, price, image_url, category, stock)
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                """, (name, description, price, relative_path, category_id, stock, is_trending))
-                
-                conn.commit()
+            # File validation
+            if not image or image.filename == '':
+                flash('No file selected. Please choose a valid image.', 'danger')
+                return redirect(request.url)
             
-
+            if not allowed_file(image.filename):
+                flash('Invalid file format. Allowed formats: png, jpg, jpeg, gif.', 'danger')
+                return redirect(request.url)
+            
+            # Ensure upload folder exists
+            if not os.path.exists(app.config['UPLOAD_FOLDER']):
+                os.makedirs(app.config['UPLOAD_FOLDER'])
+            
+            # Secure and save the file
+            filename = secure_filename(image.filename)
+            if filename == '':
+                flash('Invalid filename.', 'danger')
+                return redirect(request.url)
+            
+            image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            image.save(image_path)  # Save the image
+            
+            # Relative path to save in DB
+            relative_path = os.path.join('static/uploads', filename)
+            
+            # Insert product into the database
+            cursor.execute("""
+                INSERT INTO products (name, description, price, image_url, category, stock, is_trending)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (name, description, price, relative_path, category, stock, is_trending))
+            
+            conn.commit()
             conn.close()
             flash('Product added successfully!', 'success')
             return redirect(url_for('manage_products'))
+        
         except Exception as e:
-            flash('Invalid file format. Please upload an image.', 'danger')
+            flash(f'Error: {e}', 'danger')  # Show exact error during debugging
             return redirect(request.url)
-    else:
-        return render_template('add_product.html', categories=categories)
-
+    
+    return render_template('add_product.html', categories=categories)
 
 
 @app.route('/edit_product/<int:product_id>', methods=['GET', 'POST'])
@@ -704,7 +734,7 @@ def edit_product(product_id):
         name = request.form['name']
         description = request.form['description']
         price = float(request.form['price'])
-        category = request.form['category']
+        category= request.form['category']
         stock = request.form['stock']
 
         # Handle image upload
@@ -740,19 +770,21 @@ def edit_product(product_id):
 
 @app.route('/delete_product/<int:product_id>', methods=['POST'])
 def delete_product(product_id):
-    try:
+    if request.method == 'POST':
         
-        conn = get_db_connection()
-        cursor = conn.cursor()
+        try:
+            
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute("DELETE FROM products WHERE id = %s", (product_id,))
+            conn.commit()
+            conn.close()
         
-        cursor.execute("DELETE FROM products WHERE id = %s", (product_id,))
-        conn.commit()
-        conn.close()
-    
-        flash('Product deleted successfully!', 'success')
-    except Exception as e:
-        flash(f"Error: (str{e})", 'danger')
-        return redirect(url_for('manage_products'))
+            flash('Product deleted successfully!', 'success')
+        except Exception as e:
+            flash(f"Error: (str{e})", 'danger')
+    return redirect(url_for('manage_products'))
     
     
     
@@ -936,7 +968,7 @@ def manage_slides():
                 # Insert slide details into the database
                 cursor.execute(
                     "INSERT INTO slides (image_url, overlay_title, overlay_caption) VALUES (%s, %s, %s)",
-                    (f'/static/images/{filename}', title, caption)
+                    (f'/static/uploads/{filename}', title, caption)
                 )
                 conn.commit()
                 flash("Slide added successfully!", "success")

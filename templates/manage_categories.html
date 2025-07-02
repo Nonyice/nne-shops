@@ -4,6 +4,15 @@
     <title>Manage Categories</title>
 </head>
 <body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+
+        {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+
+    {% endif %}
+    {% endwith %}
     <h1>Manage Categories</h1>
 
     <!-- Form to Create Category -->

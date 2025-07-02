@@ -6,6 +6,8 @@
 
 
 <div class="container-cart">
+    <h2>Manage Cart Items </h2>
+    <p> Adjust quantities added to your cart to the actual quantities you want. Make use of the arrow up and down in the "Quantity" column or type in the actual quantity required for specific items. Hit the update button to save changes</p><br>
     {% if cart_items %}
 
     <table>
@@ -37,8 +39,11 @@
             {% endfor %}
         </tbody>
     </table>
-    <p>Total: ${{ total_price }}</p>
-    <a href="/checkout" class="btn">Checkout</a>
+    <p style="font-size: 20px; font-weight: bold; padding: 10px">Total: ${{ total_price }}</p>
+    <div class="ok-btn">
+        <a href="/checkout" class="btn">OK!</a>
+    </div>
+    
 {% else %}
     <p>Your cart is empty.</p>
 {% endif %}

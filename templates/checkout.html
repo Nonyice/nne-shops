@@ -6,7 +6,8 @@
 
 {% if 'user_id' in session %}
 <div class="container-checkout">
-    <h2>Checkout</h2>
+    <h2>Checkout Summary</h2>
+    <p style="color: #2acca3;"> Below is a summary of items you have added to your cart, kindly complete the shipping details in order to  checkout. Thank you!</p><br>
     {% if cart_items %}
     <table>
         <thead>
@@ -33,19 +34,27 @@
                 <th>${{ total_price }}</th>
             </tr>
         </tfoot>
-    </table>
+    </table><br>
     <form method="POST" action="/checkout">
         <label for="customer_name">Customer Name:</label>
-        <input type="text" id="customer_name" name="customer_name" placeholder="Full name/Nickname" required><br>
+        <input type="text" id="customer_name" name="customer_name" placeholder="Full name/Nickname" required>
     
         <label for="email">Email Address:</label>
-        <input type="text" id="email" name="email" value="{{ email }}" readonly><br>
+        <input type="text" id="email" name="email" value="{{ email }}" readonly>
+
+        <label for="address">Shipping Address:</label>
+        <input type="text" id="address" name="address" placeholder="Delivery  Address" required>
+
+
+        <label for="postcode">Postcode:</label>
+        <input type="text" id="postcode" name="postcode" placeholder="Enter your Postcode" required>
+
     
-        <button type="submit" class="btn">Place Order</button>
+        <button type="submit" class="btn">Checkout</button>
     </form>
     
 {% else %}
-    <p>Your cart is empty. <a href="{{ url_for('shop') }}">Go back to shop</a>.</p>
+    <p>Your cart is empty. <a href="{{ url_for('shop') }}">Shop now</a>.</p>
 {% endif %}
 </div>
 {% else %}

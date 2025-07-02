@@ -5,7 +5,6 @@
 {% block content %}
 
 <div class="container-payment">
-    <h2>Payment</h2>
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
         <ul>
@@ -15,14 +14,20 @@
         </ul>
     {% endif %}
     {% endwith %}
-    <p>Order ID: {{ order[0] }}</p>
-    <p>Total Amount: ${{ order[1] }}</p>
+    <h2>Payment</h2>
+    <p>Chose your prefered mthod of payment to complete payments for the selected items. Payments via cash transferes will be verified, kindly stay on the page for payment confirmation</p>
+    
+    <div class="shipping-summary">
+    <p>Order Total: £{{ order[1] }}</p>
+    <p>Shipping Fee: £{{ order[0] }}</p>
+    <p>Grand Total: £{{ order[0] + order[1] }}</p>
+    
+    </div>
     
     <form method="POST" action="/payment">
         <label for="payment_method">Choose a payment method:</label>
         <select id="payment_method" name="payment_method" required>
             <option value="credit_card">Credit Card</option>
-            <option value="paypal">PayPal</option>
             <option value="bank_transfer">Bank Transfer</option>
         </select>
         <button type="submit" class="btn">Pay Now</button>
